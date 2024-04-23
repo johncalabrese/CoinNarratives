@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoinNarratives</title>
+    <!-- Include jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <!-- Include Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+
+    <h1>Token Narratives</h1>
+
+    <h2>Market Overview</h2>
+    <div id="overall-chart"></div>
+    <h2>Individual Categories</h2>
+    <div id="rwa-chart"></div>
+    <div id="defi-chart"></div>
+    <div id="l2-chart"></div>
+    <div id="l1-chart"></div>
+    <div id="meme-chart"></div>
+
+    <script>
+        // Make an AJAX request to fetch data from the server
+        $.ajax({
+            url: '/get_data',
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                // Extract data for each category and the overall market from the response
+                var categoriesData = response.categories;
+                var overallMarketData = response.overall_market;
+
+                // Process data for each category
+                Object.keys(categoriesData).forEach(function(category) {
+                    var categoryData = categoriesData[category];
+                    // Process category data and generate bubble chart
+                    generateBubbleChart(category, categoryData);
+                });
+
+                // Collect data for all categories
+                var overallMarketDataArray = [];
+                // Process overall market data for each category
+                Object.keys(overallMarketData).forEach(function(category) {
+                    var overallMarketVolume = overallMarketData[category].usd_24h_vol;
+                    var overallMarketChange = overallMarketData[category].weighted_24h_change;
+                    
+                    // Collect category, volume, and change data for each category
+                    var categoryData = {
+                        category: category,
+                        volume: overallMarketVolume,
+                        change: overallMarketChange
+                    };
+                    
+                    overallMarketDataArray.push(categoryData);
+                });
+
+                // Generate overall market bubble chart using consolidated data
+                generateOverallMarketBubbleChart(overallMarketDataArray);
+            },
+            error: function(xhr, status, error) {
+                // Handle error
+                console.error('Error fetching data:', error);
+            }
+        });
+
+        // Function to generate a bubble chart for a specific category
+        function generateBubbleChart(category, data) {
+            // Implement bubble chart generation logic using the data for the specified category
+            console.log('Generating bubble chart for category:', category);
+            const dataArray = Object.entries(data);
+            var usd_24h_vol = [];
+            var usd_24h_change = [];
+            var usd = [];
+            var name = [];
+
+            // Iterate over each inner array in the data array
+            dataArray.forEach(function(innerArray) {
+                const tokenName = innerArray[0]; // Token name is at index 0
+                const tokenData = innerArray[1]; // Token data is at index 1
+
+                // Extract specific data fields from the token data object
+                const token_usd = tokenData.usd;
+                const token_usd_24h_change = tokenData.usd_24h_change;
+                const token_usd_24h_vol = tokenData.usd_24h_vol;
+
+                // Push data for current token to respective arrays
+                name.push(tokenName)
+                usd.push(token_usd);
+                usd_24h_change.push(token_usd_24h_change);
+                usd_24h_vol.push(token_usd_24h_vol);
+            });
+
+            // Parse the data and create the trace for the bubble chart
+            var trace = {
+                x: usd_24h_vol,
+                y: usd_24h_change,
+                mode: 'markers',
+                marker: {
+                    size: usd_24h_vol, // Adjust marker size based on volume
+                    sizemode: 'area', // Set the sizemode to 'area'
+                    sizeref: 2.0 * Math.max(...usd_24h_vol) / (50 ** 2), // Adjust the sizeref for better scaling
+                    sizemin: 4, // Minimum size of bubbles
+                    color: 'blue', // Set marker color
+                    opacity: 0.8 // Set marker opacity
+                },
+                text: name, // Use token names for hover text
+            };
+
+            // Define layout for the bubble chart
+            var layout = {
+                title: `Overview for ${category}`,
+                xaxis: {
+                    title: 'Total Volume (USD)',
+                    type: 'log' // Set x-axis type to log
+                },
+                yaxis: {
+                    title: 'Weighted 24hr Change (%)'
+                }
+            };
+
+            // Plot the bubble chart
+            Plotly.newPlot(`${category}-chart`, [trace], layout);
+        }
+
+        // Function to generate a bubble chart for the overall market
+        function generateOverallMarketBubbleChart(overallMarketDataArray) {
+            // Implement bubble chart generation logic using the overall market data
+            console.log('Generating bubble chart for overall market', overallMarketDataArray);
+
+            // Extract data for plotting
+            var volumes = overallMarketDataArray.map(function(data) {
+                return data.volume;
+            });
+
+            var changes = overallMarketDataArray.map(function(data) {
+                return data.change;
+            });
+
+            var categories = overallMarketDataArray.map(function(data) {
+                return data.category;
+            });
+
+            // Define trace for the overall market bubble chart
+            var trace = {
+                x: volumes,
+                y: changes,
+                mode: 'markers',
+                marker: {
+                    size: volumes, // Adjust marker size based on volume
+                    sizemode: 'area', // Set the sizemode to 'area'
+                    sizeref: 2.0 * Math.max(...volumes) / (50 ** 2), // Adjust the sizeref for better scaling
+                    sizemin: 4, // Minimum size of bubbles
+                    color: 'blue', // Set marker color
+                    opacity: 0.8 // Set marker opacity
+                },
+                text: categories, // Use category names for hover text
+            };
+
+            // Define layout for the overall market bubble chart
+            var layout = {
+                title: 'Overall Market Summary',
+                xaxis: {
+                    title: 'Total Volume (USD)',
+                    type: 'log' // Set x-axis type to log
+                },
+                yaxis: {
+                    title: 'Weighted 24hr Change (%)'
+                }
+            };
+
+            // Plot the bubble chart for the overall market
+            Plotly.newPlot('overall-chart', [trace], layout);
+        }
+    </script>
+
+</body>
+</html>
