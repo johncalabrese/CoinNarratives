@@ -1,2 +1,0 @@
-# CoinNarratives
-CoinNarrative WebApp
