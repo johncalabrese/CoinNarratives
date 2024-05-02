@@ -8,6 +8,8 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <!-- Include Plotly.js -->
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <!-- Include D3 library -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
 
@@ -37,7 +39,7 @@
                 Object.keys(categoriesData).forEach(function(category) {
                     var categoryData = categoriesData[category];
                     // Process category data and generate bubble chart
-                    generateBubbleChart(category, categoryData);
+                    generateTreemap(category, categoryData);
                 });
 
                 // Collect data for all categories
@@ -66,15 +68,21 @@
             }
         });
 
-        // Function to generate a bubble chart for a specific category
-        function generateBubbleChart(category, data) {
-            // Implement bubble chart generation logic using the data for the specified category
-            console.log('Generating bubble chart for category:', category);
+        // Function to generate a treemap for a specific category
+        function generateTreemap(category, data) {
+            // Implement treemap generation logic using the data for the specified category
+            console.log('Generating treemap for category:', category);
             const dataArray = Object.entries(data);
-            var usd_24h_vol = [];
-            var usd_24h_change = [];
-            var usd = [];
-            var name = [];
+            var labels = [];
+            var parents = [];
+            var values = [];
+            var colors = [];
+            var customdata = [];
+
+            // Extract 24hr change values from the token data
+            const changeValues = dataArray.map(([tokenName, tokenData]) => tokenData.usd_24h_change);
+            const minChange = Math.min(...changeValues);
+            const maxChange = Math.max(...changeValues);
 
             // Iterate over each inner array in the data array
             dataArray.forEach(function(innerArray) {
@@ -82,47 +90,61 @@
                 const tokenData = innerArray[1]; // Token data is at index 1
 
                 // Extract specific data fields from the token data object
-                const token_usd = tokenData.usd;
                 const token_usd_24h_change = tokenData.usd_24h_change;
                 const token_usd_24h_vol = tokenData.usd_24h_vol;
 
-                // Push data for current token to respective arrays
-                name.push(tokenName)
-                usd.push(token_usd);
-                usd_24h_change.push(token_usd_24h_change);
-                usd_24h_vol.push(token_usd_24h_vol);
+                // Construct labels, values, and colors for the treemap
+                labels.push(tokenName); // Token name without the change in the label
+                values.push(token_usd_24h_vol);
+                parents.push(""); // Since it's a single-level treemap, all tokens have an empty parent
+                customdata.push([token_usd_24h_vol, token_usd_24h_change]); // Store custom data for hover template
+
+                // Define the color scale function with light green, light red, and white undertones
+                const colorScale = d3.scaleLinear()
+                    .domain([minChange, 0, maxChange])  // Include 0 for white undertone
+                    .range(["red", "white", "green"]);  // Adjust colors as needed
+
+                // Determine color based on the price change value relative to the range of changes
+                const color = colorScale(token_usd_24h_change);
+                colors.push(color);
+
             });
 
-            // Parse the data and create the trace for the bubble chart
-            var trace = {
-                x: usd_24h_vol,
-                y: usd_24h_change,
-                mode: 'markers',
-                marker: {
-                    size: usd_24h_vol, // Adjust marker size based on volume
-                    sizemode: 'area', // Set the sizemode to 'area'
-                    sizeref: 2.0 * Math.max(...usd_24h_vol) / (50 ** 2), // Adjust the sizeref for better scaling
-                    sizemin: 4, // Minimum size of bubbles
-                    color: 'blue', // Set marker color
-                    opacity: 0.8 // Set marker opacity
-                },
-                text: name, // Use token names for hover text
-            };
+            // Define hover template
+            var hoverTemplate = '<b>%{label}</b><br>' +
+                                'Volume: $%{customdata[0]:,.2f}<br>' +
+                                'Change: %{customdata[1]:.2f}%';
 
-            // Define layout for the bubble chart
+            // Define data for the treemap
+            var data = [{
+                type: "treemap",
+                labels: labels,
+                parents: parents,
+                values: values,
+                customdata: customdata,
+                marker: {
+                    colors: colors, // Assign colors based on the price change values
+                },
+                hovertemplate: hoverTemplate
+            }];
+
+            // Define layout for the treemap
             var layout = {
                 title: `Overview for ${category}`,
-                xaxis: {
-                    title: 'Total Volume (USD)',
-                    type: 'log' // Set x-axis type to log
-                },
-                yaxis: {
-                    title: 'Weighted 24hr Change (%)'
+                hovermode: "closest", // Show hover labels for closest point
+                hoverlabel: {
+                    bgcolor: "white", // Set background color for hover labels
+                    bordercolor: "black", // Set border color for hover labels
+                    font: {
+                        family: "Arial", // Set font family for hover labels
+                        size: 12, // Set font size for hover labels
+                        color: "black" // Set font color for hover labels
+                    }
                 }
             };
 
-            // Plot the bubble chart
-            Plotly.newPlot(`${category}-chart`, [trace], layout);
+            // Plot the treemap
+            Plotly.newPlot(`${category}-chart`, data, layout);
         }
 
         // Function to generate a bubble chart for the overall market
@@ -167,7 +189,7 @@
                     type: 'log' // Set x-axis type to log
                 },
                 yaxis: {
-                    title: '24hr Price Change (%)'
+                    title: 'Weighted 24hr Change (%)'
                 }
             };
 
