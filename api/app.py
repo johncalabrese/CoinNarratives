@@ -1,5 +1,5 @@
 import json
-from flask import Flask,jsonify,render_template
+from flask import Flask,jsonify,render_template, send_from_directory
 from flask_caching import Cache
 from pycgapi import CoinGeckoAPI
 from dotenv import load_dotenv
@@ -12,9 +12,18 @@ load_dotenv()
 app = Flask(__name__)
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
+# Define the directory path where the images are stored
+IMAGES_FOLDER = os.path.join(os.getcwd(), 'images')
+app.config['IMAGES_FOLDER'] = IMAGES_FOLDER
+
 # Initialize CoinGeckoAPI
 coingecko_key = os.environ.get('COINGECKO_API_KEY')
 cg = CoinGeckoAPI(coingecko_key, pro_api=False)
+
+# Route to serve image files
+@app.route('/images/<path:filename>')
+def get_image(filename):
+    return send_from_directory(app.config['IMAGES_FOLDER'], filename)
 
 @app.route('/')
 def index():
