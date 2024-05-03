@@ -197,10 +197,12 @@
                 const token_usd_24h_vol = tokenData.usd_24h_vol;
 
                 // Construct labels, values, and colors for the treemap
-                labels.push(tokenName); // Token name without the change in the label
+                const label = `${tokenName}<br>Change: ${token_usd_24h_change.toFixed(2)}%<br>Volume: $${token_usd_24h_vol.toLocaleString('en-US')}`;
+                labels.push(label); // Token name with change and volume information in the label
                 values.push(token_usd_24h_vol);
                 parents.push(""); // Since it's a single-level treemap, all tokens have an empty parent
                 customdata.push([token_usd_24h_vol, token_usd_24h_change]); // Store custom data for hover template
+
 
                 // Define the color scale function with light green, light red, and white undertones
                 const colorScale = d3.scaleLinear()
@@ -214,9 +216,20 @@
             });
 
             // Define hover template
-            var hoverTemplate = '<b>%{label}</b><br>' +
-                                'Volume: $%{customdata[0]:,.2f}<br>' +
-                                'Change: %{customdata[1]:.2f}%';
+            var hoverTemplate = '<b>%{label}</b>'
+
+            // Define data for the treemap
+            var data = [{
+                type: "treemap",
+                labels: labels,
+                parents: parents,
+                values: values,
+                customdata: customdata,
+                marker: {
+                    colors: colors, // Assign colors based on the price change values
+                },
+                hovertemplate: hoverTemplate
+            }];
 
             // Define data for the treemap
             var data = [{
