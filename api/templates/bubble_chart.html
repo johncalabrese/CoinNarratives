@@ -76,18 +76,35 @@
         .menu a:hover {
             background-color: #45a049; /* Darker green on hover */
         }
+        /* Add CSS for the hover effect */
+        .coming-soon {
+            display: none;
+            color: white;
+            font-size: 12px;
+        }
+
+        span:hover .coming-soon {
+            display: block;
+        }
     </style>
 </head>
 <body>
 
-    <div id="menu" style="position: fixed; top: 0; width: 100%; background-color: #333; padding: 10px; color: white; text-align: center; z-index: 1000;">
+    <div id="menu" style="position: fixed; top: 0; width: 100%; background-color: #333; padding: 10px; color: white; display: flex; justify-content: center; align-items: center; z-index: 1000;">
         <a href="#overall-chart" style="text-decoration: none; color: white; margin-right: 10px;">Market Overview</a>
         <a href="#rwa-chart" style="text-decoration: none; color: white; margin-right: 10px;">RWA</a>
         <a href="#defi-chart" style="text-decoration: none; color: white; margin-right: 10px;">DeFi</a>
         <a href="#l2-chart" style="text-decoration: none; color: white; margin-right: 10px;">L2</a>
         <a href="#l1-chart" style="text-decoration: none; color: white; margin-right: 10px;">L1</a>
         <a href="#meme-chart" style="text-decoration: none; color: white; margin-right: 10px;">Meme</a>
+        <div style="margin-left: auto; margin-right: 10px;">
+            <a href="https://coinnarratives.canny.io/" style="text-decoration: none; color: white; padding: 8px 15px; border: 1px solid white; border-radius: 5px;">Feedback</a>
+            <span style="color: white; cursor: not-allowed; padding: 8px 15px; border: 1px solid white; border-radius: 5px; position: relative;">Sign In
+                <span class="coming-soon" style="position: absolute; top: 100%; left: 0; background-color: #333; padding: 5px; border-radius: 5px; display: none;">Coming Soon</span>
+            </span>
+        </div>
     </div>
+
 
     <h1><img src="https://i.ibb.co/y5Z5rG2/icon.jpg"> Breaking Down the Narratives</h1>
 
@@ -258,6 +275,7 @@
             hoverlabel: {
                 bgcolor: "#333", // Darker background color for hover labels
                 bordercolor: "#666", // Lighter border color for hover labels
+                name:"",
                 font: {
                     family: "Arial", // Set font family for hover labels
                     size: 12, // Set font size for hover labels
